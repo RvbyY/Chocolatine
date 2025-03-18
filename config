@@ -1,8 +1,0 @@
-[core]
-	repositoryformatversion = 0
-	filemode = true
-	bare = true
-[remote "origin"]
-	url = git@github.com:EpitechPGEPromo2029/B-DOP-200-STG-2-1-bschocolatine-bassirou.tall.git
-	fetch = +refs/*:refs/*
-	mirror = true
