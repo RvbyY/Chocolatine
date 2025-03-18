@@ -1,0 +1,11 @@
+name: Repository_Size
+run-name: ${{ github.actor }} is testing out Repository Size
+on: [push]
+
+jobs:
+    Explore-Repository-Size:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+            - run: echo running on Branch ${GITHUB_REF##*/}
