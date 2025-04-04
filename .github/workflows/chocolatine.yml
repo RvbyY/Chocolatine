@@ -1,47 +1,69 @@
 name: chocolatine
 run-name: ${{ github.actor }} is testing chocolatine
-on: [push]
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
 
 environment:
-    - MIRROR_URL=git@github.com:EpitechPGEPromo2029/B-DOP-200-STG-2-1-chocolatine-bassirou.tall.git
-    - EXECUTABLES=""
+  - MIRROR_URL=git@github.com:EpitechPGEPromo2029/B-DOP-200-STG-2-1-chocolatine-bassirou.tall.git
+  - EXECUTABLES=""
+  - LIBRARIES=""
 
 jobs:
-    check_coding_style:
-        runs-on: ubuntu-latest
+  check_coding_style:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref != 'refs/heads/ga-ignore-' && github.repository != secrets.MIRROR_URL }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run coding style checker
+        run: |
+          docker run --rm -v $(pwd):/repo ghcr.io/epitech/coding-style-checker:latest check.sh /repo /repo
+      - name: Display coding style errors
+        run: cat coding-style-reports.log
+        if: ${{ steps.check_coding_style.outputs.log != '' }}
 
-        steps:
-            - uses: actions/checkout@v3
-            - run: check.sh $(pwd) $(pwd)
-            - run: cat coding-style-reports.log
-            - if: ${{ steps.check_coding_style.outputs.log != '' }}
+  check_program_compilation:
+    runs-on: ubuntu-latest
+    needs: check_coding_style
+    if: ${{ github.ref != 'refs/heads/ga-ignore-' && github.repository != secrets.MIRROR_URL }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run make
+        run: |
+          timeout 2m make
+      - name: Clean build
+        run: make clean
+      - name: Check if executables exist and are executable
+        run: |
+          IFS=',' read -ra EXECUTABLES_ARRAY <<< "${{ env.EXECUTABLES }}"
+          for executable in "${EXECUTABLES_ARRAY[@]}"; do
+            if [ ! -x "$executable" ]; then
+              echo "Executable $executable is missing or not executable!" && exit 1
+            fi
+          done
 
-    check_program_compilation:
-        runs-on: ubuntu-latest
+  run_tests:
+    runs-on: ubuntu-latest
+    needs: check_program_compilation
+    if: ${{ github.ref != 'refs/heads/ga-ignore-' && github.repository != secrets.MIRROR_URL }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run tests
+        run: timeout 2m make tests_run
 
-        steps:
-            - uses: actions/checkout@v3
-            - run: |
-                timeout 2m make
-            - run: make clean
-
-    run_tests:
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@v3
-            - run: make tests_run
-
-    push_to_mirror:
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                fetch-depth: 0
-            - uses: pixta-dev/repository-mirroring-action@v1
-              with:
-                target_repo_url:
-                  ${{ secrets.MIRROR_URL }}
-                ssh_private_key:                           
-                  ${{ secrets.GIT_SSH_PRIVATE_KEY }}
+  push_to_mirror:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref != 'refs/heads/ga-ignore-' && github.repository != secrets.MIRROR_URL
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Push to mirror repository
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: ${{ secrets.MIRROR_URL }}
+          ssh_private_key: ${{ secrets.GIT_SSH_PRIVATE_KEY }}
