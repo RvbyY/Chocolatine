@@ -1,0 +1,47 @@
+name: chocolatine
+run-name: ${{ github.actor }} is testing chocolatine
+on: [push]
+
+environment:
+    - MIRROR_URL=git@github.com:EpitechPGEPromo2029/B-DOP-200-STG-2-1-chocolatine-bassirou.tall.git
+    - EXECUTABLES=""
+
+jobs:
+    check_coding_style:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+            - run: check.sh $(pwd) $(pwd)
+            - run: cat coding-style-reports.log
+            - if: ${{ steps.check_coding_style.outputs.log != '' }}
+
+    check_program_compilation:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+            - run: |
+                timeout 2m make
+            - run: make clean
+
+    run_tests:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+            - run: make tests_run
+
+    push_to_mirror:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                fetch-depth: 0
+            - uses: pixta-dev/repository-mirroring-action@v1
+              with:
+                target_repo_url:
+                  ${{ secrets.MIRROR_URL }}
+                ssh_private_key:                           
+                  ${{ secrets.GIT_SSH_PRIVATE_KEY }}
