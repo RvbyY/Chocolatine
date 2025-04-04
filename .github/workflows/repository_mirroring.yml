@@ -1,0 +1,18 @@
+name: Repository Mirroring
+run-name: ${{ github.actor }} is testing out Repository Mirroring
+on: [push]
+
+jobs:
+    Explore-Repository-Mirroring:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                fetch-depth: 0
+            - uses: pixta-dev/repository-mirroring-action@v1
+              with:
+                target_repo_url:
+                  git@github.com:EpitechPGEPromo2029/B-DOP-200-STG-2-1-bschocolatine-bassirou.tall.git
+                ssh_private_key:                           
+                  ${{ secrets.GIT_SSH_PRIVATE_KEY }}
