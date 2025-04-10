@@ -15,7 +15,7 @@ all:						$(OBJ)
 		gcc -o $(NAME) $(SRC) -g
 
 clean:
-		rm -f src/*.o
+		rm -f *.o
 
 fclean:	clean
 		rm -f $(NAME)
