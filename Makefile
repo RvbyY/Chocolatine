@@ -11,6 +11,7 @@ NAME = chcocolatine
 
 OBJ = $(SRC:.c=.o)
 
+
 all:						$(OBJ)
 		gcc -o $(NAME) $(SRC) -g
 
@@ -21,3 +22,5 @@ fclean:	clean
 		rm -f $(NAME)
 
 re:	fclean all
+
+tests_run: @echo tests
